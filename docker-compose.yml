@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: viaipe_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: viaipe_monitoring
+      POSTGRES_USER: viaipe_user
+      POSTGRES_PASSWORD: viaipe_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - viaipe_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U viaipe_user -d viaipe_monitoring"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  viaipe_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: viaipe_api
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://viaipe_user:viaipe_pass@postgres:5432/viaipe_monitoring
+      - VIAIPE_API_URL=https://viaipe.rnp.br/api/norte
+    networks:
+      - viaipe_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: viaipe_grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - viaipe_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+networks:
+  viaipe_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  grafana_data:
