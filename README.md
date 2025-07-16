@@ -47,7 +47,6 @@ Sistema de monitoramento containerizado da rede acadêmica brasileira ViaIpe/RNP
 | FastAPI Data Collector | Python 3.11 + FastAPI | 8000 | Coleta, processamento e orquestração |
 | PostgreSQL + TimescaleDB | PostgreSQL 15 + TimescaleDB | 5432 | Armazenamento otimizado para séries temporais |
 | Grafana | Grafana Latest | 3000 | Dashboards e visualização operacional |
-| Background Scheduler | Python AsyncIO | - | Coleta automática e processamento |
 
 ### Fluxo de Dados
 
